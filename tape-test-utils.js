@@ -75,7 +75,10 @@ module.exports.getGeneratedEvents = function(r, table, commandId, cb) {
   r.table(table + '_events').filter(r.row('commandId').eq(commandId)).run(module.exports.connection).then(
     results => results.toArray().then(
       eventBuckets => {
-        cb(Array.prototype.concat.apply([], eventBuckets.map(bucket => bucket.events)))
+        cb(Array.prototype.concat.apply([], eventBuckets.map(bucket => {
+          if(bucket.events) return bucket.events
+          return [bucket]
+        })))
       }
     )
   )
