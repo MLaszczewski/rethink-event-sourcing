@@ -22,46 +22,51 @@ module.exports.connectToDatabase = function(t,r,cb) {
 }
 
 module.exports.runCommand = function(t, r, table, cmd, cb) {
-  let commandId
-  t.test("Run command " + cmd.type, t => {
-    t.plan(2)
-    t.test('Push command', t => {
+  return new Promise( (resolve, reject) => {
+    let commandId
+    t.test("Run command " + cmd.type, t => {
       t.plan(2)
-      cmd.state = "new",
-        r.table(table + '_commands').insert(cmd).run(module.exports.connection).then( result => {
-          t.equal(result.inserted, 1, "one command inserted")
-          commandId = result.generated_keys[0]
-          cb(commandId)
-          t.equal(result.generated_keys.length, 1, "one key generated")
-        })
-    })
-
-    t.test('Wait for command done', t => {
-      t.plan(2)
-      r.table(table + '_commands').get(commandId).changes({ includeInitial: true  }).run(module.exports.connection,
-        (err, cursor) => {
-          t.equal(err, null, "no error")
-          cursor.each((err, result) => {
-            if(err) {
-              cursor.close();
-              t.fail("cursor error: "+ err)
-              return false
-            }
-            let val = result.new_val
-            if(val.state == "done") {
-              t.pass("command succeed with result: "+ JSON.stringify(val.result))
-              cursor.close()
-              return false
-            }
-            if(val.state == "failed") {
-              t.fail("command failed with error: "+ JSON.stringify(val.error))
-              cursor.close()
-              return false
-            }
+      t.test('Push command', t => {
+        t.plan(2)
+        cmd.state = "new",
+          r.table(table + '_commands').insert(cmd).run(module.exports.connection).then( result => {
+            t.equal(result.inserted, 1, "one command inserted")
+            commandId = result.generated_keys[0]
+            if(cb) cb(commandId)
+            t.equal(result.generated_keys.length, 1, "one key generated")
           })
-        }
-      )
+      })
+
+      t.test('Wait for command done', t => {
+        t.plan(2)
+        r.table(table + '_commands').get(commandId).changes({ includeInitial: true  }).run(module.exports.connection,
+          (err, cursor) => {
+            t.equal(err, null, "no error")
+            cursor.each((err, result) => {
+              if(err) {
+                cursor.close();
+                t.fail("cursor error: "+ err)
+                return false
+              }
+              let val = result.new_val
+              if(val.state == "done") {
+                t.pass("command succeed with result: "+ JSON.stringify(val.result))
+                cursor.close()
+                resolve(val.result)
+                return false
+              }
+              if(val.state == "failed") {
+                t.fail("command failed with error: "+ JSON.stringify(val.error))
+                cursor.close()
+                reject(val.error)
+                return false
+              }
+            })
+          }
+        )
+      })
     })
+    
   })
 
 }
