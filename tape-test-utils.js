@@ -28,13 +28,14 @@ module.exports.runCommand = function(t, r, table, cmd, cb) {
       t.plan(2)
       t.test('Push command', t => {
         t.plan(2)
-        cmd.state = "new",
-          r.table(table + '_commands').insert(cmd).run(module.exports.connection).then( result => {
-            t.equal(result.inserted, 1, "one command inserted")
-            commandId = result.generated_keys[0]
-            if(cb) cb(commandId)
-            t.equal(result.generated_keys.length, 1, "one key generated")
-          })
+        cmd.state = "new"
+        cmd.timestamp = new Date()
+        r.table(table + '_commands').insert(cmd).run(module.exports.connection).then( result => {
+          t.equal(result.inserted, 1, "one command inserted")
+          commandId = result.generated_keys[0]
+          if(cb) cb(commandId)
+          t.equal(result.generated_keys.length, 1, "one key generated")
+        })
       })
 
       t.test('Wait for command done', t => {
