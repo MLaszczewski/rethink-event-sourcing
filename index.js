@@ -1,4 +1,4 @@
-
+const r = require('rethinkdb')
 const Service = require("./lib/Service.js")
 
 module.exports = (config) => {
@@ -17,9 +17,11 @@ module.exports.command = async function(connection, service, command, parameters
   }
   cmd.state = "new"
   cmd.timestamp = new Date()
-  let result = await r.table( service + "_commands" ).insert(cmd).run(command)
+  let svc = service.definition ? service.definition.name : service.name || service
+  let result = await r.table( svc + "_commands" ).insert(cmd).run(connection)
   let commandId = result.generated_keys[0]
-  let changeStream = await r.table( service + '_commands' ).get(commandId).changes({ includeInitial: true  }).run(conn)
+  let changesStream = await r.table( svc + '_commands' ).get(commandId)
+      .changes({ includeInitial: true  }).run(connection)
   return new Promise( (resolve, reject) => {
     changesStream.each( (err, result) => {
       if(err) {
