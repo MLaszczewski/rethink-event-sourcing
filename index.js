@@ -1,4 +1,4 @@
-const r = require('rethinkdb')
+const r = require.main.rethinkdb || require('rethinkdb')
 const Service = require("./lib/Service.js")
 
 module.exports = (config) => {
