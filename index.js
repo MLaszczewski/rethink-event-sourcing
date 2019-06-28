@@ -19,7 +19,7 @@ module.exports.command = async function(connection, service, command, parameters
   cmd.timestamp = new Date()
   let svc = service.definition ? service.definition.name : service.name || service
   let result = await r.table( svc + "_commands" ).insert(cmd).run(connection)
-  let commandId = result.generated_keys[0]
+  let commandId = cmd.id || result.generated_keys[0]
   let changesStream = await r.table( svc + '_commands' ).get(commandId)
       .changes({ includeInitial: true  }).run(connection)
   return new Promise( (resolve, reject) => {
