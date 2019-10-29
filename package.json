@@ -1,6 +1,6 @@
 {
   "name": "rethink-event-sourcing",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,6 @@
   "author": "",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "rethinkdb": "^2.3.3"
+    "rethinkdb-reconnect": "git+https://github.com/MLaszczewski/rethinkdb-reconnect.git"
   }
 }
