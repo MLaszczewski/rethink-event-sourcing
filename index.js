@@ -26,12 +26,12 @@ module.exports.command = async function(connection, service, command, parameters
 
   return new Promise( (resolve, reject) => {
     const readResult = async () => {
-      let changesStream = await connection.run(
+      let changeStream = await connection.run(
           r.table( svc + '_commands' ).get(commandId).changes({ includeInitial: true  })
       )
-      changesStream.each( (err, result) => {
+      changeStream.each( (err, result) => {
         if(err) {
-          changesStream.close()
+          changeStream.close()
           if(connection.handleDisconnectError(err)) return readResult()
           reject(err)
           return false
@@ -39,12 +39,12 @@ module.exports.command = async function(connection, service, command, parameters
         let val = result.new_val
         if(val.state == "done") {
           resolve(val.result)
-          changesStream.close()
+          changeStream.close()
           return false
         }
         if(val.state == "failed") {
           reject(val.error)
-          changesStream.close()
+          changeStream.close()
           return false
         }
       })
